@@ -47,6 +47,10 @@ void avaSel(const uint64_t& down)
 
         copyFile(jpgIn, trgJpg);
         fsdevCommitDevice("account");
+
+        //Reload target to make sure it stuck
+        texDestroy(target);
+        target = texLoadJPEGFile(trgJpg.c_str());
     }
     else if(down & KEY_L)
     {
