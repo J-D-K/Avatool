@@ -70,17 +70,11 @@ void copyFile(const std::string& from, const std::string& to)
     size_t fileSize = f.tellg();
     f.seekg(0, f.beg);
 
-    char tmp[32];
-
     uint8_t *buff = new uint8_t[0x80000];
     for(unsigned i = 0; i < fileSize; )
     {
-        size_t tPos = t.tellp();
-
         f.read((char *)buff, 0x80000);
         t.write((char *)buff, f.gcount());
-
-        size_t writeSize = (size_t)t.tellp() - tPos;
 
         i += f.gcount();
     }

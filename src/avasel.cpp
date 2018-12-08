@@ -60,7 +60,7 @@ void avaSel(const uint64_t& down)
     else if(down & KEY_R)
     {
         trgtInd++;
-        if(trgtInd > acc.getCount() - 1)
+        if(trgtInd > (int)acc.getCount() - 1)
             trgtInd = 0;
 
         texDestroy(target);
