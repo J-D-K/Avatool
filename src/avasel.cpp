@@ -69,3 +69,10 @@ void avaSel(const uint64_t& down)
 
     avaMenu.draw(clrCreateU32(0xFFFFFFFF));
 }
+
+void avaSelClean()
+{
+    texDestroy(target);
+    texDestroy(source);
+    texDestroy(arrow);
+}

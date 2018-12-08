@@ -87,6 +87,9 @@ int main(int argc, const char *argv[])
 
     fontDestroy(shared);
 
+    if(success)
+        avaSelClean();
+
     pmshellExit();
     hidExit();
     romfsExit();
