@@ -160,7 +160,7 @@ void drawText(const char *str, tex *target, const font *f, int x, int y, int sz)
                 }
                 break;
 
-            case '_':
+            case '%':
                 {
                     if(clrGetColor(textColor) == 0xFF00FFFF)
                         textColor = clrCreateU32(0xFFFFFFFF);

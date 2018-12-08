@@ -7,8 +7,7 @@
 class dirList
 {
     public:
-        dirList(const std::string& _path);
-        void reassign(const std::string& _path);
+        void assign(const std::string& _path);
         void rescan();
 
         std::string getItem(int index);

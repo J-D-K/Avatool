@@ -38,8 +38,8 @@ INCLUDES	:=	inc
 EXEFS_SRC	:=	exefs_src
 APP_TITLE   :=  Avatool
 APP_AUTHOR  :=  JK
-APP_VERSION :=  -2
-#ROMFS	    :=	romfs
+APP_VERSION :=  -1
+ROMFS	    :=	romfs
 
 #---------------------------------------------------------------------------------
 # options for code generation
