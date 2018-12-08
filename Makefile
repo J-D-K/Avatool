@@ -30,7 +30,7 @@ include $(DEVKITPRO)/libnx/switch_rules
 #     - icon.jpg
 #     - <libnx folder>/default_icon.jpg
 #---------------------------------------------------------------------------------
-TARGET		:=	avatool
+TARGET		:=	Avatool
 BUILD		:=	build
 SOURCES		:=	src
 #DATA		:=	data
@@ -38,7 +38,7 @@ INCLUDES	:=	inc
 EXEFS_SRC	:=	exefs_src
 APP_TITLE   :=  Avatool
 APP_AUTHOR  :=  JK
-APP_VERSION :=  0
+APP_VERSION :=  1
 ROMFS	    :=	romfs
 
 #---------------------------------------------------------------------------------

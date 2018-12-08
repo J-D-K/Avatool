@@ -3,10 +3,13 @@
 #include "dir.h"
 #include "menu.h"
 #include "avasel.h"
+#include "gfx.h"
 
 dirList acc, sd;
 menu    avaMenu;
 tex *target, *source, *arrow;
+
+extern font *shared;
 
 void avaSelPrep()
 {
@@ -20,6 +23,9 @@ void avaSelPrep()
     avaMenu.setParams(30, 234, 1220);
     for(unsigned i = 0; i < sd.getCount(); i++)
         avaMenu.addOpt(sd.getItem(i));
+
+    //burn controls into framebuffer
+    drawText("L/R = Change Target. A = Overwrite", frameBuffer, shared, 800, 672, 18);
 }
 
 void avaSel(const uint64_t& down)
@@ -28,7 +34,6 @@ void avaSel(const uint64_t& down)
 
     //cheat
     drawRect(frameBuffer, 30, 88, 1220, 559, clrCreateU32(0xFF2D2D2D));
-
     texDrawSkipNoAlpha(target, frameBuffer, 436, 98);
     texDrawNoAlpha(arrow, frameBuffer, 572, 98);
     texDrawSkipNoAlpha(source, frameBuffer, 708, 98);
