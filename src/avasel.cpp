@@ -25,7 +25,7 @@ void avaSelPrep()
         avaMenu.addOpt(sd.getItem(i));
 
     //burn controls into framebuffer
-    drawText("L/R = Change Target. A = Overwrite", frameBuffer, shared, 800, 672, 18);
+    drawText("L/R = Change Target. A = Overwrite. Y = Backup Target", frameBuffer, shared, 800, 672, 18);
 }
 
 void avaSel(const uint64_t& down)
@@ -56,6 +56,12 @@ void avaSel(const uint64_t& down)
         //Reload target to make sure it stuck
         texDestroy(target);
         target = texLoadJPEGFile(trgJpg.c_str());
+    }
+    else if (down & KEY_Y) {
+        std::string jpgIn = "account:/su/avators/" + acc.getItem(trgtInd);
+        std::string trgJpg = "sdmc:/avatar/" + sd.getItem(avaMenu.getSelected());
+
+        copyFile(jpgIn, trgJpg);
     }
     else if(down & KEY_L)
     {
