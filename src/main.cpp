@@ -1,6 +1,4 @@
 #include <switch.h>
-#include <stdio.h>
-#include <sys/stat.h>
 
 #include "gfx.h"
 #include "cons.h"
@@ -12,11 +10,14 @@ font *shared;
 
 bool shutdownMount()
 {
-    info.out(shared, "Attempting to shut down %account%... ");
+    info.out(shared, "Attempting to shut down %account% and %olsc%... ");
     if(R_SUCCEEDED(pmshellTerminateProcessByTitleId(0x010000000000001E)))
     {
         info.out(shared, "^Succeeded^!");
         info.nl();
+
+        //helps a bit
+        pmshellTerminateProcessByTitleId(0x010000000000003E);
 
         info.out(shared, "Attempting to mount #0x8000000000000010#... ");
         FsFileSystem acc;

@@ -4,12 +4,14 @@
 #include "menu.h"
 #include "avasel.h"
 #include "gfx.h"
+#include "cons.h"
 
 dirList acc, sd;
 menu    avaMenu;
 tex *target, *source, *arrow;
 
 extern font *shared;
+extern console info;
 
 void avaSelPrep()
 {
@@ -25,7 +27,10 @@ void avaSelPrep()
         avaMenu.addOpt(sd.getItem(i));
 
     //burn controls into framebuffer
-    drawText("L/R = Change Target. A = Overwrite", frameBuffer, shared, 800, 672, 18);
+    const char *ctrl = "L/R = Change Target. Y = Dump all to SD. A = Overwrite";
+    size_t ctrlWidth = textGetWidth(ctrl, shared, 18);
+    unsigned ctrlX = (1280 / 2) - (ctrlWidth / 2);
+    drawText(ctrl, frameBuffer, shared, ctrlX, 672, 18);
 }
 
 void avaSel(const uint64_t& down)
@@ -56,6 +61,17 @@ void avaSel(const uint64_t& down)
         //Reload target to make sure it stuck
         texDestroy(target);
         target = texLoadJPEGFile(trgJpg.c_str());
+    }
+    else if(down & KEY_Y)
+    {
+        //Copy all
+        copyDirToDir("account:/su/avators/", "sdmc:/avatar/");
+
+        //Reset and reinit menu
+        avaMenu.reset();
+        sd.rescan();
+        for(unsigned i = 0; i < sd.getCount(); i++)
+            avaMenu.addOpt(sd.getItem(i));
     }
     else if(down & KEY_L)
     {

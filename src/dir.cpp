@@ -24,7 +24,8 @@ void dirList::assign(const std::string& _path)
 
     while((ent = readdir(d)))
     {
-        char ext[4];
+        char ext[5];
+        memset(ext, 0, 5);
         memcpy(ext, &ent->d_name[strlen(ent->d_name) - 4], 4);
         if(strcmp(".jpg", ext) == 0)
             item.push_back(ent->d_name);
@@ -83,4 +84,30 @@ void copyFile(const std::string& from, const std::string& to)
 
     f.close();
     t.close();
+}
+
+void copyDirToDir(const std::string& from, const std::string& to)
+{
+    dirList list;
+    list.assign(from);
+
+    for(unsigned i = 0; i < list.getCount(); i++)
+    {
+        if(list.isDir(i))
+        {
+            std::string newFrom = from + list.getItem(i) + "/";
+            std::string newTo   = to + list.getItem(i);
+            mkdir(newTo.c_str(), 0777);
+            newTo += "/";
+
+            copyDirToDir(newFrom, newTo);
+        }
+        else
+        {
+            std::string fullFrom = from + list.getItem(i);
+            std::string fullTo   = to   + list.getItem(i);
+
+            copyFile(fullFrom, fullTo);
+        }
+    }
 }
