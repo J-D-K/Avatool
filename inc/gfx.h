@@ -40,8 +40,8 @@ bool graphicsInit(int windowWidth, int windowHeight);
 //Exits needed services
 bool graphicsExit();
 
-//Flush, swap buffers
-void gfxHandleBuffs();
+void gfxBeginFrame();
+void gfxEndFrame();
 
 //Creates color from uint32_t
 inline clr clrCreateU32(uint32_t color)
@@ -80,7 +80,7 @@ inline uint32_t clrGetColor(const clr c)
 }
 
 //Draws text using f
-void drawText(const char *str, tex *target, const font *f, int x, int y, int sz);
+void drawText(const char *str, tex *target, const font *f, int x, int y, int sz, clr c);
 
 //Draws text wrapping lines
 void drawTextWrap(const char *str, tex *target, const font *f, int x, int y, int sz, clr c, int maxWidth);
@@ -108,6 +108,9 @@ tex *texLoadJPEGFile(const char *path);
 
 //Loads jpeg from memory
 tex *texLoadJPEGMem(const uint8_t *jpegData, size_t jpegSize);
+
+//Loads image from RGBA - Not meant for large images
+tex *texLoadRGBA(const char *path);
 
 //Frees memory used by t
 void texDestroy(tex *t);
@@ -153,6 +156,29 @@ void fontDestroy(font *f);
 
 //returns framebuffer tex pointer
 extern tex *frameBuffer;
+
+/*Switch extended button codes:
+    e0e0 = A
+    e0e1 = B
+    e0e2 = X
+    e0e3 = Y
+    e0e4 = L
+    e0e5 = R
+    e0e6 = ZL
+    e0e7 = ZR
+    e0e8 = SL
+    e0e9 = SR
+    e0ea = dpad
+    e0eb = dpad up
+    e0ec = dpad down
+    e0ed = dpad left
+    e0ee = dpad right
+    e0ef = +
+    e0f0 = -
+
+    ^^Replace second e with a for different button set. C0 to C9 = analog stick
+*/
+
 #ifdef __cplusplus
 }
 #endif

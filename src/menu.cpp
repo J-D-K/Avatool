@@ -112,7 +112,7 @@ void menu::draw(const clr& textClr)
         if(i == selected)
             drawRect(frameBuffer, x, y + ((i - start) * 36), rW, 32, rectClr);
 
-        drawText(opt[i].c_str(), frameBuffer, shared, x + 8, (y + 8) + ((i - start) * 36), 18);
+        drawText(opt[i].c_str(), frameBuffer, shared, x + 8, (y + 8) + ((i - start) * 36), 18, clrCreateU32(0xFFFFFFFF));
     }
 }
 

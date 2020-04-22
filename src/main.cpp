@@ -7,36 +7,37 @@
 
 console info(28);
 font *shared;
+const char *ctrl = "\ue0e4\ue0e5 Change Target   \ue0e3 Dump all to SD   \ue0e0 Overwrite";
 
 bool shutdownMount()
 {
-    info.out(shared, "Attempting to shut down %account% and %olsc%... ");
-    if(R_SUCCEEDED(pmshellTerminateProcessByTitleId(0x010000000000001E)))
+    info.out("Attempting to shut down %account% and %olsc%... ");
+    if(R_SUCCEEDED(pmshellTerminateProgram(0x010000000000001E)))
     {
-        info.out(shared, "^Succeeded^!");
+        info.out("^Succeeded^!");
         info.nl();
 
         //helps a bit
-        pmshellTerminateProcessByTitleId(0x010000000000003E);
+        pmshellTerminateProgram(0x010000000000003E);
 
-        info.out(shared, "Attempting to mount #0x8000000000000010#... ");
+        info.out("Attempting to mount #0x8000000000000010#... ");
         FsFileSystem acc;
-        if(R_SUCCEEDED(fsMount_SystemSaveData(&acc, 0x8000000000000010)))
+        if(R_SUCCEEDED(fsOpen_SystemSaveData(&acc, FsSaveDataSpaceId_System, 0x8000000000000010, (AccountUid) {0})))
         {
-            info.out(shared, "^Succeeded^!");
+            info.out("^Succeeded^!");
             info.nl();
             fsdevMountDevice("account", acc);
             return true;
         }
         else
         {
-            info.out(shared, "*Failed*.");
+            info.out("*Failed*.");
             info.nl();
         }
     }
     else
     {
-        info.out(shared, "*Failed*");
+        info.out("*Failed*");
         info.nl();
     }
 
@@ -53,20 +54,18 @@ int main(int argc, const char *argv[])
     shared = fontLoadSharedFonts();
 
     bool success = false;
+    unsigned ctrlX = 1230 - textGetWidth(ctrl, shared, 18);
 
-    texClearColor(frameBuffer, clrCreateU32(0xFF2D2D2D));
-    drawText("Avatool", frameBuffer, shared, 64, 38, 24);
-    drawRect(frameBuffer, 30, 87, 1220, 1, clrCreateU32(0xFFFFFFFF));
-    drawRect(frameBuffer, 30, 648, 1220, 1, clrCreateU32(0xFFFFFFFF));
-
-    info.out(shared, "*WARNING*: This tool works by shutting down the %account% service on your Switch. This *will* lead to an eventual crash.");
+    info.out("*WARNING*: This tool works by shutting down the %account% service on your Switch. This *will* lead to an eventual crash.");
     info.nl();
-    info.out(shared, "Press A to continue. + to exit.");
+    info.out("Press \ue0e0 to continue. \ue0ef to exit.");
     info.nl();
 
     while(appletMainLoop())
     {
         hidScanInput();
+        gfxBeginFrame();
+        texClearColor(frameBuffer, clrCreateU32(0xFF2D2D2D));
 
         uint64_t down = hidKeysDown(CONTROLLER_P1_AUTO);
 
@@ -74,16 +73,22 @@ int main(int argc, const char *argv[])
         {
             if(down & KEY_A && (success = shutdownMount()))
                 avaSelPrep();
+
+            info.draw(shared);
         }
         else
         {
             avaSel(down);
+            drawText(ctrl, frameBuffer, shared, ctrlX, 672, 18, clrCreateU32(0xFFFFFFFF));
         }
 
         if(down & KEY_PLUS)
             break;
 
-        gfxHandleBuffs();
+        drawText("Avatool", frameBuffer, shared, 64, 38, 24, clrCreateU32(0xFFFFFFFF));
+        drawRect(frameBuffer, 30, 87, 1220, 1, clrCreateU32(0xFFFFFFFF));
+        drawRect(frameBuffer, 30, 648, 1220, 1, clrCreateU32(0xFFFFFFFF));
+        gfxEndFrame();
     }
 
     fontDestroy(shared);

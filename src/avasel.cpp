@@ -25,12 +25,6 @@ void avaSelPrep()
     avaMenu.setParams(30, 234, 1220);
     for(unsigned i = 0; i < sd.getCount(); i++)
         avaMenu.addOpt(sd.getItem(i));
-
-    //burn controls into framebuffer
-    const char *ctrl = "L/R = Change Target. Y = Dump all to SD. A = Overwrite";
-    size_t ctrlWidth = textGetWidth(ctrl, shared, 18);
-    unsigned ctrlX = (1280 / 2) - (ctrlWidth / 2);
-    drawText(ctrl, frameBuffer, shared, ctrlX, 672, 18);
 }
 
 void avaSel(const uint64_t& down)
