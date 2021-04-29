@@ -8,10 +8,16 @@
 
 dirList acc, sd;
 menu    avaMenu;
-tex *target, *source, *arrow;
+tex *target, *source, *arrow, *nope;
 
 extern font *shared;
 extern console info;
+static bool isValid = false;
+
+static inline bool sourceIsGood()
+{
+    return source->width == 256 && source->height == 256;
+}
 
 void avaSelPrep()
 {
@@ -21,6 +27,10 @@ void avaSelPrep()
     arrow  = texLoadPNGFile("romfs:/arrow.png");
     target = texLoadJPEGFile(std::string("account:/su/avators/" + acc.getItem(0)).c_str());
     source = texLoadJPEGFile(std::string("sdmc:/avatar/" + sd.getItem(0)).c_str());
+    nope = texLoadPNGFile("romfs:/nope.png");
+
+    if(sourceIsGood())
+        isValid = true;
 
     avaMenu.setParams(30, 234, 1220);
     for(unsigned i = 0; i < sd.getCount(); i++)
@@ -35,7 +45,11 @@ void avaSel(const uint64_t& down)
     drawRect(frameBuffer, 30, 88, 1220, 559, clrCreateU32(0xFF2D2D2D));
     texDrawSkipNoAlpha(target, frameBuffer, 436, 98);
     texDrawNoAlpha(arrow, frameBuffer, 572, 98);
-    texDrawSkipNoAlpha(source, frameBuffer, 708, 98);
+
+    if(sourceIsGood())
+        texDrawSkipNoAlpha(source, frameBuffer, 708, 98);
+    else
+        texDrawSkipNoAlpha(nope, frameBuffer, 708, 98);
 
     bool ch = avaMenu.handleInput(down);
     if(ch)
@@ -44,7 +58,7 @@ void avaSel(const uint64_t& down)
         source = texLoadJPEGFile(std::string("sdmc:/avatar/" + sd.getItem(avaMenu.getSelected())).c_str());
     }
 
-    if(down & KEY_A)
+    if(down & HidNpadButton_A && sourceIsGood())
     {
         std::string jpgIn = "sdmc:/avatar/" + sd.getItem(avaMenu.getSelected());
         std::string trgJpg = "account:/su/avators/" + acc.getItem(trgtInd);
@@ -56,7 +70,7 @@ void avaSel(const uint64_t& down)
         texDestroy(target);
         target = texLoadJPEGFile(trgJpg.c_str());
     }
-    else if(down & KEY_Y)
+    else if(down & HidNpadButton_Y)
     {
         //Copy all
         copyDirToDir("account:/su/avators/", "sdmc:/avatar/");
@@ -67,7 +81,7 @@ void avaSel(const uint64_t& down)
         for(unsigned i = 0; i < sd.getCount(); i++)
             avaMenu.addOpt(sd.getItem(i));
     }
-    else if(down & KEY_L)
+    else if(down & HidNpadButton_L)
     {
         trgtInd--;
         if(trgtInd < 0)
@@ -76,7 +90,7 @@ void avaSel(const uint64_t& down)
         texDestroy(target);
         target = texLoadJPEGFile(std::string("account:/su/avators/" + acc.getItem(trgtInd)).c_str());
     }
-    else if(down & KEY_R)
+    else if(down & HidNpadButton_R)
     {
         trgtInd++;
         if(trgtInd > (int)acc.getCount() - 1)
@@ -94,4 +108,5 @@ void avaSelClean()
     texDestroy(target);
     texDestroy(source);
     texDestroy(arrow);
+    texDestroy(nope);
 }

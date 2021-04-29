@@ -34,6 +34,13 @@ typedef struct
     uint32_t *data;
 } tex;
 
+typedef struct
+{
+    size_t size;
+    unsigned width, height;
+    uint8_t *dat;
+} alphaMask;
+
 //Inits needed graphics stuff
 bool graphicsInit(int windowWidth, int windowHeight);
 
@@ -81,9 +88,11 @@ inline uint32_t clrGetColor(const clr c)
 
 //Draws text using f
 void drawText(const char *str, tex *target, const font *f, int x, int y, int sz, clr c);
+void drawTextf(tex *target, const font *f, int x, int y, int sz, clr c, const char *fmt, ...);
 
 //Draws text wrapping lines
 void drawTextWrap(const char *str, tex *target, const font *f, int x, int y, int sz, clr c, int maxWidth);
+void drawTextfWrap(tex *target, const font *f, int x, int y, int sz, clr c, int maxWidth, const char *fmt, ...);
 
 //Returns text width
 size_t textGetWidth(const char *str, const font *f, int sz);
@@ -141,14 +150,19 @@ void texScaleToTex(const tex *in, tex *out, int scale);
 
 //Creates and copies data from another image returns tex
 tex *texCreateFromPart(const tex *src, int x, int y, int w, int h);
+
+void texApplyAlphaMask(tex *target, const alphaMask *a);
 /*
 TEX END
 */
 
+alphaMask *alphaMaskLoad(unsigned w, unsigned h, const char *file);
+void alphaMaskDestroy(alphaMask *a);
+
 //Loads and returns font with Switch shared font loaded
 font *fontLoadSharedFonts();
 
-//Loads and returns TTF font
+//Loads and returns TTF font.
 font *fontLoadTTF(const char *path);
 
 //Frees font

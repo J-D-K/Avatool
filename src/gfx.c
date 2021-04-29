@@ -6,11 +6,12 @@
 #include <png.h>
 #include <jpeglib.h>
 #include <zlib.h>
+#include <setjmp.h>
 
 #include "gfx.h"
 
 tex *frameBuffer;
-clr textClr;
+static clr textClr;
 
 static NWindow *window;
 static Framebuffer fb;
@@ -23,23 +24,51 @@ typedef struct
     uint32_t sz;
 } rgbaHead;
 
+typedef struct
+{
+    struct jpeg_error_mgr mgr;
+    jmp_buf jmpBuffer;
+} jpegError;
+
+#pragma GCC optimize ("Ofast")
 static inline uint32_t blend(const clr px, const clr fb)
 {
-    if(px.a == 0x00)
-        return clrGetColor(fb);
-    else if(px.a == 0xFF)
-        return clrGetColor(px);
+    uint32_t ret;
+    switch(px.a)
+    {
+        case 0x00:
+            ret = clrGetColor(fb);
+            break;
 
-    uint8_t subAl = 0xFF - px.a;
+        case 0xFF:
+            ret = clrGetColor(px);
+            break;
 
-    uint8_t fR = (px.r * px.a + fb.r * subAl) / 0xFF;
-    uint8_t fG = (px.g * px.a + fb.g * subAl) / 0xFF;
-    uint8_t fB = (px.b * px.a + fb.b * subAl) / 0xFF;
+        default:
+            {
+                uint8_t subAl = 0xFF - px.a;
 
-    return (0xFF << 24 | fB << 16 | fG << 8 | fR);
+                uint8_t fR = (px.r * px.a + fb.r * subAl) / 0xFF;
+                uint8_t fG = (px.g * px.a + fb.g * subAl) / 0xFF;
+                uint8_t fB = (px.b * px.a + fb.b * subAl) / 0xFF;
+                ret = (0xFF << 24 | fB << 16 | fG << 8 | fR);
+            }
+            break;
+    }
+    return ret;
 }
 
-static inline uint32_t smooth(const clr px1, const clr px2)
+static inline clr smooth(const clr px1, const clr px2)
+{
+    clr ret;
+    ret.r = (px1.r + px2.r) / 2;
+    ret.g = (px1.g + px2.g) / 2;
+    ret.b = (px1.b + px2.b) / 2;
+    ret.a = (px1.a + px2.a) / 2;
+    return ret;
+}
+
+static inline uint32_t smooth_32t(const clr px1, const clr px2)
 {
     uint8_t fR = (px1.r + px2.r) / 2;
     uint8_t fG = (px1.g + px2.g) / 2;
@@ -66,7 +95,7 @@ bool graphicsInit(int windowWidth, int windowHeight)
 
     framebufferCreate(&fb, window, windowWidth, windowHeight, PIXEL_FORMAT_RGBA_8888, 2);
     framebufferMakeLinear(&fb);
-    plInitialize();
+    plInitialize(PlServiceType_System);
 
     //Make a fake tex that points to framebuffer
     frameBuffer = malloc(sizeof(tex));
@@ -111,6 +140,7 @@ static void drawGlyph(const FT_Bitmap *bmp, tex *target, int _x, int _y)
     if(bmp->pixel_mode != FT_PIXEL_MODE_GRAY)
         return;
 
+    clr txClr = textClr, tgtClr;
     uint8_t *bmpPtr = bmp->buffer;
     for(int y = _y; y < _y + bmp->rows; y++)
     {
@@ -125,9 +155,8 @@ static void drawGlyph(const FT_Bitmap *bmp, tex *target, int _x, int _y)
 
             if(*bmpPtr > 0)
             {
-                clr txClr = clrCreateRGBA(textClr.r, textClr.g, textClr.b, *bmpPtr);
-                clr tgtClr = clrCreateU32(*rowPtr);
-
+                txClr.a = *bmpPtr;
+                tgtClr = clrCreateU32(*rowPtr);
                 *rowPtr = blend(txClr, tgtClr);
             }
         }
@@ -152,14 +181,12 @@ static inline FT_GlyphSlot loadGlyph(const uint32_t c, const font *f, FT_Int32 f
         FT_Load_Glyph(f->face[0], FT_Get_Char_Index(f->face[0], c), flags);
         return f->face[0]->glyph;
     }
+
     for(int i = 0; i < 6; i++)
     {
         FT_UInt cInd = 0;
-        if( (cInd = FT_Get_Char_Index(f->face[i], c)) != 0 && \
-                FT_Load_Glyph(f->face[i], cInd, flags) == 0)
-        {
+        if( (cInd = FT_Get_Char_Index(f->face[i], c)) != 0 && FT_Load_Glyph(f->face[i], cInd, flags) == 0)
             return f->face[i]->glyph;
-        }
     }
 
     return NULL;
@@ -190,19 +217,11 @@ void drawText(const char *str, tex *target, const font *f, int x, int y, int sz,
                 continue;
                 break;
 
-            case '%':
-                    if(clrGetColor(textClr) == 0xFF00FFFF)
-                        textClr = c;
-                    else
-                        textClr = clrCreateU32(0xFFFFFFFF);
-                continue;
-                break;
-
-            case '^':
-                if(clrGetColor(textClr) == 0xFF00FF00)
+            case '#':
+                if(clrGetColor(textClr) == 0xFFEE9900)
                     textClr = c;
                 else
-                    textClr = clrCreateU32(0xFF00FF00);
+                    textClr = clrCreateU32(0xFFEE9900);
                 continue;
                 break;
 
@@ -211,6 +230,22 @@ void drawText(const char *str, tex *target, const font *f, int x, int y, int sz,
                     textClr = c;
                 else
                     textClr = clrCreateU32(0xFF0000FF);
+                continue;
+                break;
+
+            case '<':
+                if(clrGetColor(textClr) == 0xFF00FCF8)
+                    textClr = c;
+                else
+                    textClr = clrCreateU32(0xFF00FCF8);
+                continue;
+                break;
+
+            case '>':
+                if(clrGetColor(textClr) == 0xFF00FF00)
+                    textClr = c;
+                else
+                    textClr = clrCreateU32(0xFF00FF00);
                 continue;
                 break;
         }
@@ -226,6 +261,17 @@ void drawText(const char *str, tex *target, const font *f, int x, int y, int sz,
     }
 }
 
+void drawTextf(tex *target, const font *f, int x, int y, int sz, clr c, const char *fmt, ...)
+{
+    char tmp[512];
+    va_list args;
+    va_start(args, fmt);
+    vsprintf(tmp, fmt, args);
+    va_end(args);
+
+    drawText(tmp, target, f, x, y, sz, c);
+}
+
 void drawTextWrap(const char *str, tex *target, const font *f, int x, int y, int sz, clr c, int maxWidth)
 {
     char wordBuf[128];
@@ -235,10 +281,9 @@ void drawTextWrap(const char *str, tex *target, const font *f, int x, int y, int
     resizeFont(f, sz);
     textClr = c;
 
-
     for(unsigned i = 0; i < strLength; )
     {
-        nextbreak = strcspn(&str[i], " /");
+        nextbreak = strcspn(&str[i], " /_-");
 
         memset(wordBuf, 0, 128);
         memcpy(wordBuf, &str[i], nextbreak + 1);
@@ -268,27 +313,35 @@ void drawTextWrap(const char *str, tex *target, const font *f, int x, int y, int
                     continue;
                     break;
 
-                case '%':
-                        if(clrGetColor(textClr) == 0xFF00FFFF)
-                            textClr = c;
-                        else
-                            textClr = clrCreateU32(0xFFFFFFFF);
-                    continue;
-                    break;
-
-                case '^':
-                    if(clrGetColor(textClr) == 0xFF00FF00)
+                case '#':
+                    if(clrGetColor(textClr) == 0xFFEE9900)
                         textClr = c;
                     else
-                        textClr = clrCreateU32(0xFF00FF00);
+                        textClr = clrCreateU32(0xFFEE9900);
                     continue;
                     break;
 
                 case '*':
-                    if(clrGetColor(textClr) == 0xFFFFFF00)
+                    if(clrGetColor(textClr) == 0xFF0000FF)
                         textClr = c;
                     else
-                        textClr = clrCreateU32(0xFFFFFF00);
+                        textClr = clrCreateU32(0xFF0000FF);
+                    continue;
+                    break;
+
+                case '<':
+                    if(clrGetColor(textClr) == 0xFF00FCF8)
+                        textClr = c;
+                    else
+                        textClr = clrCreateU32(0xFF00FCF8);
+                    continue;
+                    break;
+
+                case '>':
+                    if(clrGetColor(textClr) == 0xFF00FF00)
+                        textClr = c;
+                    else
+                        textClr = clrCreateU32(0xFF00FF00);
                     continue;
                     break;
             }
@@ -302,9 +355,19 @@ void drawTextWrap(const char *str, tex *target, const font *f, int x, int y, int
                 tmpX += slot->advance.x >> 6;
             }
         }
-
         i += strlen(wordBuf);
     }
+}
+
+void drawTextfWrap(tex *target, const font *f, int x, int y, int sz, clr c, int maxWidth, const char *fmt, ...)
+{
+    char tmp[512];
+    va_list args;
+    va_start(args, fmt);
+    vsprintf(tmp, fmt, args);
+    va_end(args);
+
+    drawTextWrap(tmp, target, f, x, y, sz, c, maxWidth);
 }
 
 size_t textGetWidth(const char *str, const font *f, int sz)
@@ -319,18 +382,21 @@ size_t textGetWidth(const char *str, const font *f, int sz)
     for(unsigned i = 0; i < length; )
     {
         untCnt = decode_utf8(&tmpChr, (const uint8_t *)&str[i]);
+        i += untCnt;
+
+        //Ignore color changing chars
+        if(tmpChr == '\n' || tmpChr == '#' || tmpChr == '*' || tmpChr == '<' || tmpChr == '>')
+            continue;
 
         if(untCnt <= 0)
             break;
 
-        i += untCnt;
         FT_GlyphSlot slot = loadGlyph(tmpChr, f, FT_LOAD_DEFAULT);
         if(ret)
             return 0;
 
         width += slot->advance.x >> 6;
     }
-
     return width;
 }
 
@@ -446,15 +512,28 @@ tex *texLoadPNGFile(const char *path)
     return NULL;
 }
 
+static void jpegExit(j_common_ptr ptr)
+{
+    jpegError *err = (jpegError *)ptr->err;
+    longjmp(err->jmpBuffer, 1);
+}
+
 tex *texLoadJPEGFile(const char *path)
 {
     FILE *jpegIn = fopen(path, "rb");
-    if(jpegIn != NULL)
+    if(jpegIn)
     {
         struct jpeg_decompress_struct jpegInfo;
-        struct jpeg_error_mgr error;
+        jpegError jpgError;
 
-        jpegInfo.err = jpeg_std_error(&error);
+        jpegInfo.err = jpeg_std_error(&jpgError.mgr);
+        jpgError.mgr.error_exit = jpegExit;
+        if(setjmp(jpgError.jmpBuffer))
+        {
+            jpeg_destroy_decompress(&jpegInfo);
+            fclose(jpegIn);
+            return NULL;
+        }
 
         jpeg_create_decompress(&jpegInfo);
         jpeg_stdio_src(&jpegInfo, jpegIn);
@@ -472,7 +551,8 @@ tex *texLoadJPEGFile(const char *path)
         jpeg_start_decompress(&jpegInfo);
 
         JSAMPARRAY row = malloc(sizeof(JSAMPROW));
-        row[0] = malloc(sizeof(JSAMPLE) * ret->width * 3);
+        for(unsigned i = 0; i < ret->height; i++)
+            row[0] = malloc(sizeof(JSAMPLE) * ret->width * 3);
 
         uint32_t *dataPtr = &ret->data[0];
         for(int y = 0; y < ret->height; y++)
@@ -499,9 +579,15 @@ tex *texLoadJPEGFile(const char *path)
 tex *texLoadJPEGMem(const uint8_t *jpegData, size_t jpegSize)
 {
     struct jpeg_decompress_struct jpegInfo;
-    struct jpeg_error_mgr error;
+    jpegError jpgError;
 
-    jpegInfo.err = jpeg_std_error(&error);
+    jpegInfo.err = jpeg_std_error(&jpgError.mgr);
+    jpgError.mgr.error_exit = jpegExit;
+    if(setjmp(jpgError.jmpBuffer))
+    {
+        jpeg_destroy_decompress(&jpegInfo);
+        return NULL;
+    }
 
     jpeg_create_decompress(&jpegInfo);
     jpeg_mem_src(&jpegInfo, jpegData, jpegSize);
@@ -517,8 +603,9 @@ tex *texLoadJPEGMem(const uint8_t *jpegData, size_t jpegSize)
 
     jpeg_start_decompress(&jpegInfo);
 
-    JSAMPARRAY row = malloc(sizeof(JSAMPARRAY));
-    row[0] = malloc(sizeof(JSAMPLE) * ret->width * 3);
+    JSAMPARRAY row = malloc(sizeof(JSAMPROW));
+    for(unsigned i = 0; i < ret->height; i++)
+        row[0] = malloc(sizeof(JSAMPLE) * ret->width * 3);
 
     uint32_t *dataPtr = &ret->data[0];
     for(int y = 0; y < ret->height; y++)
@@ -646,8 +733,7 @@ void texDrawSkip(const tex *t, tex *target, int x, int y)
                 clr px1 = clrCreateU32(*dataPtr++);
                 clr px2 = clrCreateU32(*dataPtr++);
                 clr fbPx = clrCreateU32(*rowPtr);
-
-                *rowPtr = blend(clrCreateU32(smooth(px1, px2)), fbPx);
+                *rowPtr = blend(smooth(px1, px2), fbPx);
             }
         }
     }
@@ -672,7 +758,7 @@ void texDrawSkipNoAlpha(const tex *t, tex *target, int x, int y)
                 clr px1 = clrCreateU32(*dataPtr++);
                 clr px2 = clrCreateU32(*dataPtr++);
 
-                *rowPtr = smooth(px1, px2);
+                *rowPtr = smooth_32t(px1, px2);
             }
         }
     }
@@ -748,6 +834,47 @@ void texScaleToTex(const tex *in, tex *out, int scale)
             }
         }
     }
+}
+
+void texApplyAlphaMask(tex *target, const alphaMask *a)
+{
+    if(target->width != a->width || target->height != a->height)
+        return;
+
+    uint32_t *pix = &target->data[0];
+    for(unsigned i = 0; i < target->size; i++, pix++)
+    {
+        clr msk = clrCreateU32(*pix);
+        msk.a = a->dat[i];
+        *pix = clrGetColor(msk);
+    }
+}
+
+alphaMask *alphaMaskLoad(unsigned w, unsigned h, const char *file)
+{
+    FILE *mskIn = fopen(file, "rb");
+    if(!mskIn)
+        return NULL;
+
+    fseek(mskIn, 0, SEEK_END);
+    size_t mskSize = ftell(mskIn);
+    fseek(mskIn, 0, SEEK_SET);
+
+    alphaMask *ret = malloc(sizeof(alphaMask));
+    ret->width = w;
+    ret->height = h;
+    ret->dat = malloc(w * h);
+
+    fread(ret->dat, 1, mskSize, mskIn);
+    fclose(mskIn);
+
+    return ret;
+}
+
+void alphaMaskDestroy(alphaMask *a)
+{
+    free(a->dat);
+    free(a);
 }
 
 font *fontLoadSharedFonts()

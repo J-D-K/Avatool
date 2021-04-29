@@ -32,7 +32,7 @@ menu::~menu()
 bool menu::handleInput(const uint64_t& down)
 {
     int size = opt.size() - 1;
-    if(down & KEY_UP)
+    if(down & HidNpadButton_Up)
     {
         selected--;
         if(selected < 0)
@@ -47,7 +47,7 @@ bool menu::handleInput(const uint64_t& down)
 
         return true;
     }
-    else if(down & KEY_DOWN)
+    else if(down & HidNpadButton_Down)
     {
         selected++;
         if(selected > size)
@@ -60,7 +60,7 @@ bool menu::handleInput(const uint64_t& down)
 
         return true;
     }
-    else if(down & KEY_RIGHT)
+    else if(down & HidNpadButton_Right)
     {
         selected += 5;
         if(selected > size)
@@ -70,7 +70,7 @@ bool menu::handleInput(const uint64_t& down)
 
         return true;
     }
-    else if(down & KEY_LEFT)
+    else if(down & HidNpadButton_Left)
     {
         selected -= 5;
         if(selected < 0)
