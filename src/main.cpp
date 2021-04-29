@@ -20,7 +20,8 @@ bool shutdownMount()
         //helps a bit
         pmshellTerminateProgram(0x010000000000003E);
 
-        svcSleepThread(5 * 1e+9);
+        //Sleeping helps with mount
+        svcSleepThread(1e+9);
 
         info.out("Attempting to mount #0x8000000000000010#... ");
         FsFileSystem acc;
