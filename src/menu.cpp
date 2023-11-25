@@ -2,9 +2,7 @@
 #include <switch.h>
 
 #include "gfx.h"
-#include "menu.h"
-
-extern font *shared;
+#include "menu.hpp"
 
 void menu::setParams(const unsigned& _x, const unsigned& _y, const unsigned& _rW)
 {
@@ -84,7 +82,7 @@ bool menu::handleInput(const uint64_t& down)
     return false;
 }
 
-void menu::draw(const clr& textClr)
+void menu::draw(const clr& textClr, font *f)
 {
     if(clrAdd)
     {
@@ -112,7 +110,7 @@ void menu::draw(const clr& textClr)
         if(i == selected)
             drawRect(frameBuffer, x, y + ((i - start) * 36), rW, 32, rectClr);
 
-        drawText(opt[i].c_str(), frameBuffer, shared, x + 8, (y + 8) + ((i - start) * 36), 18, clrCreateU32(0xFFFFFFFF));
+        drawText(opt[i].c_str(), frameBuffer, f, x + 8, (y + 8) + ((i - start) * 36), 18, clrCreateU32(0xFFFFFFFF));
     }
 }
 
@@ -133,5 +131,3 @@ void menu::adjust()
     else if(opt.size() > 10 && start + 10 > (int)opt.size() - 1)
         start--;
 }
-
-

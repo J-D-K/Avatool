@@ -6,6 +6,7 @@
 
 #include "gfx.h"
 
+//Very simple, quick, messy console
 class console
 {
     public:

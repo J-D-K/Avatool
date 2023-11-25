@@ -7,11 +7,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
-#include "dir.h"
-#include "cons.h"
-
-extern console info;
-extern font *shared;
+#include "fs.hpp"
 
 //Modified to only save *.jpg
 void dirList::assign(const std::string& _path)
