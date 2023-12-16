@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gfx.h"
+#include "graphics.hpp"
 
 class avatoolState
 {
@@ -8,6 +8,6 @@ class avatoolState
         avatoolState() { }
         virtual ~avatoolState() { };
 
-        virtual void update(uint64_t padDown);
-        virtual void render(tex *frameBuffer, font *f);
+        virtual void update(const uint64_t& padDown);
+        virtual void render(graphics *gfx);
 };

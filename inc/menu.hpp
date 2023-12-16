@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "gfx.h"
+#include "graphics.hpp"
 
 class menu
 {
@@ -23,7 +23,7 @@ class menu
         int getSelected() { return selected; }
 
         //Draws the menu at x and y. rectWidth is the width of the rectangle drawn under the selected
-        void draw(const clr& textClr, font *f);
+        void draw(graphics *gfx, const uint32_t& color);
 
         //Clears and resets menu
         void reset();

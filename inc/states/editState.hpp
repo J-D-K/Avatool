@@ -1,24 +1,23 @@
 #pragma once
-
+#include <SDL2/SDL.h>
 #include "avatoolState.hpp"
 #include "fs.hpp"
 #include "menu.hpp"
-#include "gfx.h"
+#include "graphics.hpp"
 
 class editState : public avatoolState
 {
     public:
-        editState();
+        editState(graphics *gfx);
         ~editState();
 
-        void update(uint64_t padDown);
-        void render(tex *framebuffer, font *f);
+        void update(const uint64_t& padDown);
+        void render(graphics *gfx);
 
     private:
-        const std::string targetDirPath = "acc:/su/avators/";
-        const std::string sourceDirPath = "sdmc:/avatars/";
         int targetIndex = 0;
-        tex *arrow = NULL, *targetIcon = NULL, *sourceIcon = NULL, *errorIcon = NULL;
+        SDL_Texture *arrow, *targetIcon, *sourceIcon, *errorIcon;
         dirList targetDir, sourceDir;
         menu sourceMenu;
+        graphics *gfx;
 };

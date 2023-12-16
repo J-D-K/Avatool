@@ -4,83 +4,77 @@
 #include "states/warningState.hpp"
 #include "states/editState.hpp"
 
-void debOutputFile(const char *name)
+avatool::avatool()
 {
-    FILE *deb = fopen(name, "w");
-    fclose(deb);
-}
-
-avatool::avatool(int windowWidth, int windowHeight)
-{
-    //Init services + old JKSV gfx.c
+    //Init services
     romfsInit();
     hidInitialize();
     pmshellInitialize();
-    graphicsInit(1280, 720);
+    plInitialize(PlServiceType_User);
 
-    //Load system font
-    this->systemFont = fontLoadSharedFonts();
+    //Init SDL for video
+    SDL_Init(SDL_INIT_VIDEO);
+
+    //Takes care of window/renderer and has all rendering drawing functions
+    gfx = std::make_unique<graphics>();
+
+    //App stack
+    appStateStack = std::make_unique<avatoolStack>();
 
     //Init gamepad
     padConfigureInput(1, HidNpadStyleSet_NpadStandard);
-    padInitializeDefault(&this->gamepad);
+    padInitializeDefault(&gamepad);
 
-    appStateStack.push(new warningState(&this->appStateStack));
-    printf("appStateStack: %p\n", &this->appStateStack);
+    //Push initial warning
+    appStateStack->push(new warningState(gfx.get(), appStateStack.get()));
 
-    this->running = true;
+    running = true;
 }
 
 avatool::~avatool()
 {
     //Free memory for any states left
-    while(!this->appStateStack.empty())
+    while(!appStateStack->empty())
     {
-        delete this->appStateStack.top();
-        this->appStateStack.pop();
+        delete appStateStack->top();
+        appStateStack->pop();
     }
-    printf("Free stack\n");
-
-    //Free font
-    fontDestroy(this->systemFont);
-    printf("Free font\n");
 
     //Exit gfx + services
-    graphicsExit();
+    plExit();
     pmshellExit();
     hidExit();
     romfsExit();
-    printf("Exit services\n");
+    SDL_Quit();
 }
 
 void avatool::update()
 {
-    //printf("avatool::update\n");
     //Update gamepad, I only care about down for this app
-    padUpdate(&this->gamepad);
-    uint64_t gamePadDown = padGetButtonsDown(&this->gamepad);
+    padUpdate(&gamepad);
+    uint64_t gamePadDown = padGetButtonsDown(&gamepad);
 
     //Exit on +
     if(gamePadDown & HidNpadButton_Plus)
-        this->running = false;
+    {
+        running = false;
+    }
 
     //Update state at top of app stack
-    this->appStateStack.top()->update(gamePadDown);
+    appStateStack->top()->update(gamePadDown);
 }
 
 void avatool::render()
 {
-    //printf("avatool::render\n");
-    gfxBeginFrame();
-    this->renderBaseApp();
-    appStateStack.top()->render(frameBuffer, this->systemFont);
-    gfxEndFrame();
+    gfx->beginFrame(COLOR_DEFAULT_CLEAR);
+    renderBaseApp();
+    appStateStack->top()->render(gfx.get());
+    gfx->endFrame();
 }
 
 void avatool::renderBaseApp()
 {
-    texClearColor(frameBuffer, clrCreateU32(0xFF2D2D2D));
-    drawText("Avatool", frameBuffer, this->systemFont, 64, 38, 24, clrCreateU32(0xFFFFFFFF));
-    drawRect(frameBuffer, 30, 87, 1220, 1, clrCreateU32(0xFFFFFFFF));
-    drawRect(frameBuffer, 30, 648, 1220, 1, clrCreateU32(0xFFFFFFFF));
+    gfx->renderTextf(NULL, 38, COLOR_WHITE, 64, 24, "Avatool");
+    gfx->renderLine(NULL, COLOR_WHITE, 30, 87, 1220, 87);
+    gfx->renderLine(NULL, COLOR_WHITE, 30, 648, 1220, 648);
 }

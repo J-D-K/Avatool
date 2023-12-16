@@ -1,7 +1,7 @@
 #include <string>
 #include <switch.h>
 
-#include "gfx.h"
+#include "graphics.hpp"
 #include "menu.hpp"
 
 void menu::setParams(const unsigned& _x, const unsigned& _y, const unsigned& _rW)
@@ -82,7 +82,7 @@ bool menu::handleInput(const uint64_t& down)
     return false;
 }
 
-void menu::draw(const clr& textClr, font *f)
+void menu::draw(graphics *gfx, const uint32_t& color)
 {
     if(clrAdd)
     {
@@ -103,14 +103,15 @@ void menu::draw(const clr& textClr, font *f)
     else
         length = start + 11;
 
-    clr rectClr = clrCreateRGBA(0x00, 0x60 + clrSh, 0xBB + clrSh, 0xFF);
-
+    uint32_t selectionColor = createColor(0x00, 0x60 + clrSh, 0xBB + clrSh, 0xFF);
     for(int i = start; i < length; i++)
     {
         if(i == selected)
-            drawRect(frameBuffer, x, y + ((i - start) * 36), rW, 32, rectClr);
+        {
+            gfx->renderRectFill(NULL, selectionColor, x, y + ((i - start) * 36), rW, 32);
+        }
 
-        drawText(opt[i].c_str(), frameBuffer, f, x + 8, (y + 8) + ((i - start) * 36), 18, clrCreateU32(0xFFFFFFFF));
+        gfx->renderTextf(NULL, 18, COLOR_WHITE, x + 8, (y + 8) + ((i - start) * 36), opt[i].c_str());
     }
 }
 

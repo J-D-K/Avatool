@@ -1,123 +1,128 @@
 #include <switch.h>
 #include <string>
+#include "graphics.hpp"
 #include "states/editState.hpp"
 
+//Names of textures
+static const std::string TEX_NAME_ARROW = "arrow";
+static const std::string TEX_NAME_ERROR = "errorIcon";
+static const std::string TEX_NAME_TARGET = "targetIcon";
+static const std::string TEX_NAME_SOURCE = "sourceIcon";
+//Paths to avatar images
+static const std::string targetDirPath = "acc:/su/avators/";
+static const std::string sourceDirPath = "sdmc:/avatars/";
+//Text at the bottom right
 static const std::string bottomGuide = "\ue0e4\ue0e5 Change Target  \ue0e0 Overwrite";
 
 //This should check more
-static bool sourceIconIsGood(tex *sourceIcon)
+static bool sourceIconIsGood(SDL_Texture *source)
 {
-    return sourceIcon->width == 256 && sourceIcon->height == 256;
+    int width, height;
+    SDL_QueryTexture(source, NULL, NULL, &width, &height);
+    return width == 256 && height == 256;
 }
 
-editState::editState()
+editState::editState(graphics *gfx) : gfx(gfx)
 {
-    printf("editState constructor\n");
     //Assign directories
-    this->targetDir.assign(this->targetDirPath);
-    this->sourceDir.assign(this->sourceDirPath);
-    std::string currentTargetIcon = this->targetDirPath + this->targetDir.getItem(0);
-    std::string currentSourceIcon = this->sourceDirPath + this->sourceDir.getItem(0); 
-    printf("Assign dirs\n");
+    targetDir.assign(targetDirPath);
+    sourceDir.assign(sourceDirPath);
+    std::string currentTargetIcon = targetDirPath + targetDir.getItem(0);
+    std::string currentSourceIcon = sourceDirPath + sourceDir.getItem(0); 
 
     //Load textures, target source icons
-    this->arrow = texLoadPNGFile("romfs:/arrow.png");
-    this->errorIcon = texLoadPNGFile("romfs:/nope.png");
-    this->targetIcon = texLoadJPEGFile(currentTargetIcon.c_str());
-    this->sourceIcon = texLoadJPEGFile(currentSourceIcon.c_str());
-    printf("Load textures\n");
+    arrow = gfx->textureLoadFromFile(TEX_NAME_ARROW, "romfs:/arrow.png");
+    errorIcon = gfx->textureLoadFromFile(TEX_NAME_ERROR, "romfs:/errorIcon.png");
+    targetIcon = gfx->textureLoadFromFile(TEX_NAME_TARGET, currentTargetIcon.c_str());
+    sourceIcon = gfx->textureLoadFromFile(TEX_NAME_SOURCE, currentSourceIcon.c_str());
 
     //Setup sourceMenu
     sourceMenu.setParams(30, 234, 1220);
-    for(unsigned i = 0; i < this->sourceDir.getCount(); i++)
-        sourceMenu.addOpt(this->sourceDir.getItem(i));
-    printf("Setup sourceMenu\n");
+    for(unsigned i = 0; i < sourceDir.getCount(); i++)
+        sourceMenu.addOpt(sourceDir.getItem(i));
 }
 
 editState::~editState()
 {
-    texDestroy(this->targetIcon);
-    texDestroy(this->sourceIcon);
-    texDestroy(this->arrow);
-    texDestroy(this->errorIcon);
+
 }
 
-void editState::update(uint64_t padDown)
+void editState::update(const uint64_t& padDown)
 {   
     //Update menu, and if changed, load new source JPEG
-    bool menuChanged = this->sourceMenu.handleInput(padDown);
+    bool menuChanged = sourceMenu.handleInput(padDown);
     if(menuChanged)
     {
         //For readability
-        int sourceMenuSelected = this->sourceMenu.getSelected();
-        std::string newSourceIconPath = this->sourceDir.getItem(sourceMenuSelected);
-        std::string newSourceIcon = this->sourceDirPath + newSourceIconPath;
-        texDestroy(this->sourceIcon);
-        this->sourceIcon = texLoadJPEGFile(newSourceIcon.c_str());
+        int sourceMenuSelected = sourceMenu.getSelected();
+        std::string newSourceIconName = sourceDir.getItem(sourceMenuSelected);
+        std::string newSourceIconPath = sourceDirPath + newSourceIconName;
+        sourceIcon = gfx->textureLoadFromFile(TEX_NAME_SOURCE, newSourceIconPath.c_str());
     }
 
     //Perform actions for button presses
-    if((padDown & HidNpadButton_A) && sourceIconIsGood(this->sourceIcon))
+    if((padDown & HidNpadButton_A) && sourceIconIsGood(sourceIcon))
     {
         //Setup
-        int sourceMenuSelected = this->sourceMenu.getSelected();
-        std::string sourceIconPath = this->sourceDirPath + this->sourceDir.getItem(sourceMenuSelected);
-        std::string targetIconPath = this->targetDirPath + this->targetDir.getItem(this->targetIndex);
+        int sourceMenuSelected = sourceMenu.getSelected();
+        std::string sourceIconPath = sourceDirPath + sourceDir.getItem(sourceMenuSelected);
+        std::string targetIconPath = targetDirPath + targetDir.getItem(targetIndex);
 
         //Copy file, then commit changes to device
         copyFile(sourceIconPath, targetIconPath);
         fsdevCommitDevice("acc");
 
         //Reload target to see changes
-        texDestroy(this->targetIcon);
-        this->targetIcon = texLoadJPEGFile(targetIconPath.c_str());
+        targetIcon = gfx->textureLoadFromFile(TEX_NAME_TARGET, targetIconPath.c_str());
     }
     else if(padDown & HidNpadButton_Y)
     {
         //Copy all to SD card
-        copyDirToDir(this->targetDirPath, this->sourceDirPath);
+        copyDirToDir(targetDirPath, sourceDirPath);
 
         //Reset menu, source directory
-        this->sourceMenu.reset();
-        this->sourceDir.rescan();
-        for(unsigned i = 0; i < this->sourceDir.getCount(); i++)
-            this->sourceMenu.addOpt(this->sourceDir.getItem(i));
+        sourceMenu.reset();
+        sourceDir.rescan();
+        for(unsigned i = 0; i < sourceDir.getCount(); i++)
+            sourceMenu.addOpt(sourceDir.getItem(i));
     }
     else if(padDown & HidNpadButton_L)
     {
         //Check to wrap
-        if(--this->targetIndex < 0)
-            this->targetIndex = this->targetDir.getCount() - 1;
+        if(--targetIndex < 0)
+            targetIndex = targetDir.getCount() - 1;
 
         //Load new target
-        std::string newTargetPath = this->targetDirPath + this->targetDir.getItem(this->targetIndex);
-        texDestroy(this->targetIcon);
-        this->targetIcon = texLoadJPEGFile(newTargetPath.c_str());
+        std::string newTargetPath = targetDirPath + targetDir.getItem(targetIndex);
+        targetIcon = gfx->textureLoadFromFile(TEX_NAME_TARGET ,newTargetPath.c_str());
     }
     else if(padDown & HidNpadButton_R)
     {
         //Check to not go out of bounds
-        if(++this->targetIndex > (int)this->targetDir.getCount() - 1)
-            this->targetIndex = 0;
+        if(++targetIndex > (int)targetDir.getCount() - 1)
+            targetIndex = 0;
 
         //Load new target
-        std::string newTargetPath = this->targetDirPath + this->targetDir.getItem(this->targetIndex);
-        texDestroy(this->targetIcon);
-        this->targetIcon = texLoadJPEGFile(newTargetPath.c_str());
+        std::string newTargetPath = targetDirPath + targetDir.getItem(targetIndex);
+        targetIcon = gfx->textureLoadFromFile(TEX_NAME_TARGET, newTargetPath.c_str());
     }
 }
 
-void editState::render(tex *frameBuffer, font *f)
+void editState::render(graphics *gfx)
 {
     //Draw Target -> Source
-    texDrawSkipNoAlpha(this->targetIcon, frameBuffer, 436, 98);
-    texDrawNoAlpha(this->arrow, frameBuffer, 572, 98);
-    if(sourceIconIsGood(this->sourceIcon))
-        texDrawSkipNoAlpha(this->sourceIcon, frameBuffer, 708, 98);
+    gfx->renderTextureStretched(targetIcon, NULL, 436, 98, 128, 128);
+    gfx->renderTexture(arrow, NULL, 572, 98);
+    if(sourceIconIsGood(sourceIcon))
+    {
+        gfx->renderTextureStretched(sourceIcon, NULL, 708, 98, 128, 128);
+    }
     else
-        texDrawSkipNoAlpha(this->errorIcon, frameBuffer, 708, 98);
+    {
+        gfx->renderTextureStretched(errorIcon, NULL, 708, 98, 128, 128);
+    }
     
     //Draw menu
-    this->sourceMenu.draw(clrCreateU32(0xFFFFFFFF), f);
-    drawText(bottomGuide.c_str(), frameBuffer, f, 840, 673, 18, clrCreateU32(0xFFFFFFFF));
+    sourceMenu.draw(gfx, COLOR_WHITE);
+    gfx->renderTextf(NULL, 18, COLOR_WHITE, 840, 673, bottomGuide.c_str());
 }

@@ -2,20 +2,20 @@
 #include <string>
 #include <stack>
 #include "avatoolState.hpp"
-#include "console.hpp"
+#include "type.hpp"
 
 class warningState : public avatoolState
 {
     public:
         //Needs appStateStack to push edit state
-        warningState(std::stack<avatoolState *> *appStateStack);
+        warningState(graphics * gfx, avatoolStack *appStateStack);
         ~warningState();
 
-        void update(uint64_t padDown);
-        void render(tex *framebuffer, font *f);
+        void update(const uint64_t& padDown);
+        void render(graphics *gfx);
 
     private:
         bool terminateAndMount();
-        console *outputConsole;
-        std::stack<avatoolState *> *appStateStack;
+        graphics *gfx;
+        avatoolStack *appStateStack;
 };

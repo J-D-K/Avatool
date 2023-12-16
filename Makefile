@@ -39,9 +39,9 @@ include $(DEVKITPRO)/libnx/switch_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	Avatool
 BUILD		:=	build
-SOURCES		:=	src src/states
+SOURCES		:=	src src/graphics src/states
 DATA		:=	data
-INCLUDES	:=	inc
+INCLUDES	:=	inc inc/graphics
 APP_VERSION := 2.0.0
 APP_AUTHOR  := JK
 ROMFS		:=	romfs
@@ -51,7 +51,7 @@ ROMFS		:=	romfs
 #---------------------------------------------------------------------------------
 ARCH	:=	-march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
 
-CFLAGS	:=	-g -Wall -O2 -ffunction-sections `freetype-config --cflags` \
+CFLAGS	:=	-g -Wall -O2 -ffunction-sections `sdl2-config --cflags` `freetype-config --cflags` \
 			$(ARCH) $(DEFINES)
 
 CFLAGS	+=	$(INCLUDE) -D__SWITCH__
@@ -61,7 +61,7 @@ CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=c++17
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:= `freetype-config --libs` -ljpeg -lpng -lnx
+LIBS	:= `sdl2-config --libs` `freetype-config --libs` -lSDL2_image -ljpeg -lpng -lwebp -lnx
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing

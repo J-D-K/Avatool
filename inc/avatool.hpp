@@ -1,13 +1,14 @@
 #pragma once
-
+#include <memory>
 #include <stack>
 #include "avatoolState.hpp"
-#include "gfx.h"
+#include "graphics.hpp"
+#include "type.hpp"
 
 class avatool
 {
     public:
-        avatool(int windowWidth, int windowHeight);
+        avatool();
         ~avatool();
 
         bool isRunning() { return running; }
@@ -18,7 +19,8 @@ class avatool
 
     private:
         bool running = false;
-        font *systemFont = NULL;
+        std::unique_ptr<graphics> gfx;
+        //Defined in type.hpp
+        std::unique_ptr<avatoolStack> appStateStack;
         PadState gamepad;
-        std::stack<avatoolState *> appStateStack;
 };
