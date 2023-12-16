@@ -103,7 +103,7 @@ void menu::draw(graphics *gfx, const uint32_t& color)
     else
         length = start + 11;
 
-    uint32_t selectionColor = createColor(0x00, 0x60 + clrSh, 0xBB + clrSh, 0xFF);
+    uint32_t selectionColor = createColor(0x00, (0x60 + clrSh), (0xBB + clrSh), 0xFF);
     for(int i = start; i < length; i++)
     {
         if(i == selected)
