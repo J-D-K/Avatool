@@ -15,7 +15,7 @@ class editState : public avatoolState
         void render(graphics *gfx);
 
     private:
-        int targetIndex = 0;
+        int targetIndex = 0, buttonGuideX;
         SDL_Texture *arrow, *targetIcon, *sourceIcon, *errorIcon;
         dirList targetDir, sourceDir;
         menu sourceMenu;

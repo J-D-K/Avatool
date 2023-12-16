@@ -12,7 +12,7 @@ static const std::string TEX_NAME_SOURCE = "sourceIcon";
 static const std::string targetDirPath = "acc:/su/avators/";
 static const std::string sourceDirPath = "sdmc:/avatars/";
 //Text at the bottom right
-static const std::string bottomGuide = "\ue0e4\ue0e5 Change Target  \ue0e0 Overwrite";
+static const std::string bottomGuide = "\ue0e4\ue0e5 Change Target  \ue0e3 Copy avatars to SD  \ue0e0 Overwrite";
 
 //This should check more
 static bool sourceIconIsGood(SDL_Texture *source)
@@ -40,6 +40,9 @@ editState::editState(graphics *gfx) : gfx(gfx)
     sourceMenu.setParams(30, 234, 1220);
     for(unsigned i = 0; i < sourceDir.getCount(); i++)
         sourceMenu.addOpt(sourceDir.getItem(i));
+
+    //Calculate the X of the button guide on the bottom
+    buttonGuideX = 1220 - (gfx->getTextWidth(bottomGuide, 18));
 }
 
 editState::~editState()
@@ -124,5 +127,5 @@ void editState::render(graphics *gfx)
     
     //Draw menu
     sourceMenu.draw(gfx, COLOR_WHITE);
-    gfx->renderTextf(NULL, 18, COLOR_WHITE, 840, 673, bottomGuide.c_str());
+    gfx->renderTextf(NULL, 18, COLOR_WHITE, buttonGuideX, 673, bottomGuide.c_str());
 }
