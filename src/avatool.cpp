@@ -1,4 +1,5 @@
 #include <switch.h>
+#include <sys/stat.h>
 
 #include "avatool.hpp"
 #include "states/warningState.hpp"
@@ -11,6 +12,8 @@ avatool::avatool()
     hidInitialize();
     pmshellInitialize();
     plInitialize(PlServiceType_User);
+
+    mkdir("sdmc:/avatars/", 0777);
 
     //Init SDL for video
     SDL_Init(SDL_INIT_VIDEO);

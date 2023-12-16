@@ -7,4 +7,4 @@ Avatool relies on shutting down the Switch's account service. This will result i
 * Up and Down control menu
 * A overwrites targetted avatars
 	
-Avatars are 256x256 jpg images. Place them in **sdmc:/avatar/** for Avatool to find them.
+Avatars are 256x256 jpg images. Place them in **sdmc:/avatar/** for Avatool to find them. When exporting your avatars, make sure they are not progressive as the switch cannot read them if they are. This results in a blank or white user icon.

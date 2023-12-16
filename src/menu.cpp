@@ -84,6 +84,9 @@ bool menu::handleInput(const uint64_t& down)
 
 void menu::draw(graphics *gfx, const uint32_t& color)
 {
+    if(opt.size() == 0)
+        return;
+
     if(clrAdd)
     {
         clrSh += 4;
