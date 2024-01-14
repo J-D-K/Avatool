@@ -19,28 +19,24 @@ avatool::avatool()
     SDL_Init(SDL_INIT_VIDEO);
 
     //Takes care of window/renderer and has all rendering drawing functions
-    gfx = std::make_unique<graphics>();
-
-    //App stack
-    appStateStack = std::make_unique<avatoolStack>();
+    m_Graphics = std::make_unique<graphics>();
 
     //Init gamepad
-    padConfigureInput(1, HidNpadStyleSet_NpadStandard);
-    padInitializeDefault(&gamepad);
+    inputInitialize();
 
     //Push initial warning
-    appStateStack->push(new warningState(gfx.get(), appStateStack.get()));
+    m_AppStateStack.push(std::make_unique<warningState>(this));
 
-    running = true;
+    //We're running
+    m_IsRunning = true;
 }
 
 avatool::~avatool()
 {
     //Free memory for any states left
-    while(!appStateStack->empty())
+    while(!m_AppStateStack.empty())
     {
-        delete appStateStack->top();
-        appStateStack->pop();
+        m_AppStateStack.pop();
     }
 
     //Exit gfx + services
@@ -53,31 +49,36 @@ avatool::~avatool()
 
 void avatool::update()
 {
-    //Update gamepad, I only care about down for this app
-    padUpdate(&gamepad);
-    uint64_t gamePadDown = padGetButtonsDown(&gamepad);
+    //Update gamepad.
+    updateInput();
 
     //Exit on +
-    if(gamePadDown & HidNpadButton_Plus)
+    if(padKeysDown() & HidNpadButton_Plus)
     {
-        running = false;
+        m_IsRunning = false;
     }
 
     //Update state at top of app stack
-    appStateStack->top()->update(gamePadDown);
+    m_AppStateStack.top()->update();
 }
 
 void avatool::render()
 {
-    gfx->beginFrame(COLOR_DEFAULT_CLEAR);
+    m_Graphics->beginFrame(COLOR_DEFAULT_CLEAR);
     renderBaseApp();
-    appStateStack->top()->render(gfx.get());
-    gfx->endFrame();
+    m_AppStateStack.top()->render();
+    m_Graphics->endFrame();
 }
 
 void avatool::renderBaseApp()
 {
-    gfx->renderTextf(NULL, 38, COLOR_WHITE, 64, 24, "Avatool");
-    gfx->renderLine(NULL, COLOR_WHITE, 30, 87, 1220, 87);
-    gfx->renderLine(NULL, COLOR_WHITE, 30, 648, 1220, 648);
+    m_Graphics->renderTextf(NULL, 38, COLOR_WHITE, 64, 24, "Avatool");
+    m_Graphics->renderLine(NULL, COLOR_WHITE, 30, 87, 1220, 87);
+    m_Graphics->renderLine(NULL, COLOR_WHITE, 30, 648, 1220, 648);
+}
+
+void avatool::inputInitialize()
+{
+    padConfigureInput(1, HidNpadStyleSet_NpadStandard);
+    padInitializeDefault(&m_Gamepad);
 }

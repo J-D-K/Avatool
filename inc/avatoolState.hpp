@@ -5,9 +5,9 @@
 class avatoolState
 {
     public:
-        avatoolState() { }
+        avatoolState() { };
         virtual ~avatoolState() { };
 
-        virtual void update(const uint64_t& padDown);
-        virtual void render(graphics *gfx);
+        virtual void update();
+        virtual void render();
 };

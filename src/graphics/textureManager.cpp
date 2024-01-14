@@ -32,9 +32,9 @@ static SDL_Texture *loadPNGMem(SDL_Renderer *renderer, const byte *data, size_t 
 
 textureManager::~textureManager()
 {
-    for(auto& tex : textureMap)
+    for(auto& t : m_TextureMap)
     {
-        SDL_DestroyTexture(tex.second);
+        SDL_DestroyTexture(t.second);
     }
 }
 
@@ -43,14 +43,14 @@ SDL_Texture *textureManager::textureCreate(std::string textureName, SDL_Renderer
     //Destroy the texture and recreate it in this case
     if(textureIsLoaded(textureName))
     {
-        SDL_DestroyTexture(textureMap[textureName]);
+        SDL_DestroyTexture(m_TextureMap[textureName]);
     }
 
     SDL_Texture *ret = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, textureAccess, width, height);
     if(ret)
     {
         SDL_SetTextureBlendMode(ret, SDL_BLENDMODE_BLEND);
-        textureMap[textureName] = ret;
+        m_TextureMap[textureName] = ret;
     }
     return ret;
 }
@@ -61,7 +61,7 @@ SDL_Texture *textureManager::textureCreateFromSurface(std::string textureName, S
     if(ret)
     {
         SDL_SetTextureBlendMode(ret, SDL_BLENDMODE_BLEND);
-        textureMap[textureName] = ret;
+        m_TextureMap[textureName] = ret;
     }
     return ret;
 }
@@ -71,7 +71,7 @@ SDL_Texture *textureManager::textureLoadFromFile(std::string textureName, SDL_Re
     //Avatool differs here from JKSV since I'm swapping icons
     if(textureIsLoaded(textureName))
     {
-        SDL_DestroyTexture(textureMap[textureName]);
+        SDL_DestroyTexture(m_TextureMap[textureName]);
     }
 
     SDL_Texture *ret = NULL;
@@ -80,7 +80,7 @@ SDL_Texture *textureManager::textureLoadFromFile(std::string textureName, SDL_Re
     if(ret)
     {
         SDL_SetTextureBlendMode(ret, SDL_BLENDMODE_BLEND);
-        textureMap[textureName] = ret;
+        m_TextureMap[textureName] = ret;
     }
     SDL_FreeSurface(surface);
     return ret;
@@ -90,7 +90,7 @@ SDL_Texture *textureManager::textureLoadFromMem(std::string textureName, SDL_Ren
 {
     if(textureIsLoaded(textureName))
     {
-        return textureMap[textureName];
+        return m_TextureMap[textureName];
     }
 
     SDL_Texture *ret = NULL;
@@ -108,18 +108,16 @@ SDL_Texture *textureManager::textureLoadFromMem(std::string textureName, SDL_Ren
     if(ret)
     {
         SDL_SetTextureBlendMode(ret, SDL_BLENDMODE_BLEND);
-        textureMap[textureName] = ret;
+        m_TextureMap[textureName] = ret;
     }
-
     return ret;
 }
 
 bool textureManager::textureIsLoaded(std::string textureName)
 {
-    if(textureMap.find(textureName) != textureMap.end())
+    if(m_TextureMap.find(textureName) != m_TextureMap.end())
     {
         return true;
     }
-
     return false;
 }

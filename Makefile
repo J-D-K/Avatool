@@ -39,10 +39,10 @@ include $(DEVKITPRO)/libnx/switch_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	Avatool
 BUILD		:=	build
-SOURCES		:=	src src/graphics src/states
+SOURCES		:=	src src/graphics src/states src/filesystem src/ui
 DATA		:=	data
 INCLUDES	:=	inc inc/graphics
-APP_VERSION := 2.0.0
+APP_VERSION := 2.1.0
 APP_AUTHOR  := JK
 ROMFS		:=	romfs
 
@@ -176,7 +176,7 @@ else
 endif
 
 send: $(BUILD)
-	@nxlink -s $(TARGET).nro
+	@nxlink $(TARGET).nro
 
 
 #---------------------------------------------------------------------------------

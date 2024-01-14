@@ -1,3 +1,4 @@
+#include <switch.h>
 #include <cstring>
 #include "graphics/colors.hpp"
 #include "font.hpp"
@@ -71,30 +72,31 @@ systemFont::systemFont()
     setGetLanguageCode(&languageCode);
 
     //Init freetype library
-    FT_Init_FreeType(&this->lib);
+    FT_Init_FreeType(&m_Lib);
 
     //Get all shared fonts
-    plGetSharedFont(languageCode, sharedFont, 6, &this->totalFonts);
+    plGetSharedFont(languageCode, sharedFont, 6, &m_TotalFonts);
 
     //Loop and create new freetype faces for all of them
-    for(int i = 0; i < this->totalFonts; i++)
-        FT_New_Memory_Face(this->lib, reinterpret_cast<FT_Byte *>(sharedFont[i].address), sharedFont[i].size, 0, &this->faces[i]);
+    for(int i = 0; i < m_TotalFonts; i++)
+    {
+        FT_New_Memory_Face(m_Lib, reinterpret_cast<FT_Byte *>(sharedFont[i].address), sharedFont[i].size, 0, &m_Faces[i]);
+    }
 
     //Init texture cache for glyphs
-    this->glyphManager = new textureManager();
+    m_GlyphTextureManager = std::make_unique<textureManager>();
 }
 
 systemFont::~systemFont()
 {
     //Free faces
-    for(int i = 0; i < this->totalFonts; i++)
-        FT_Done_Face(this->faces[i]);
+    for(int i = 0; i < m_TotalFonts; i++)
+    {
+        FT_Done_Face(m_Faces[i]);
+    }
 
     //Free lib
-    FT_Done_FreeType(this->lib);
-
-    //Delete glyph texture manager w/ glyph textures
-    delete this->glyphManager;
+    FT_Done_FreeType(m_Lib);
 }
 
 void systemFont::renderText(SDL_Renderer *renderer, SDL_Texture *target, int fontSize, uint32_t color, int x, int y, const char *str)
@@ -219,17 +221,21 @@ int systemFont::getTextWidth(SDL_Renderer *renderer, std::string text, int fontS
 
 void systemFont::resizeFont(int fontSize)
 {
-    for(int i = 0; i < this->totalFonts; i++)
-        FT_Set_Char_Size(this->faces[i], 0, fontSize * 64, 90, 90);
+    for(int i = 0; i < m_TotalFonts; i++)
+    {
+        FT_Set_Char_Size(m_Faces[i], 0, fontSize * 64, 90, 90);
+    }
 }
 
 FT_GlyphSlot systemFont::loadGlyph(uint32_t c, FT_Int32 flags)
 {
-    for(int i = 0; i < this->totalFonts; i++)
+    for(int i = 0; i < m_TotalFonts; i++)
     {
         FT_UInt cInd = 0;
-        if( (cInd = FT_Get_Char_Index(this->faces[i], c)) != 0 && FT_Load_Glyph(this->faces[i], cInd, flags) == 0)
-            return this->faces[i]->glyph;
+        if( (cInd = FT_Get_Char_Index(m_Faces[i], c)) != 0 && FT_Load_Glyph(m_Faces[i], cInd, flags) == 0)
+        {
+            return m_Faces[i]->glyph;
+        }
     }
     return NULL;
 }
@@ -237,37 +243,42 @@ FT_GlyphSlot systemFont::loadGlyph(uint32_t c, FT_Int32 flags)
 glyph *systemFont::getGlyph(SDL_Renderer *renderer, uint32_t c, int size)
 {
     //If it's already loaded and rendered, just return it
-    if(this->glyphMap.find(std::make_pair(c, size)) != this->glyphMap.end())
-        return &this->glyphMap[std::make_pair(c, size)];
+    if(m_GlyphMap.find(std::make_pair(c, size)) != m_GlyphMap.end())
+    {
+        return &m_GlyphMap[std::make_pair(c, size)];
+    }
     
     FT_GlyphSlot glyphSlot = this->loadGlyph(c, FT_LOAD_RENDER);
     FT_Bitmap bitmap = glyphSlot->bitmap;
     if(bitmap.pixel_mode != FT_PIXEL_MODE_GRAY)
+    {
         return NULL;
+    }
 
     //Prepare buffer to convert to surface
     size_t bitmapSize = bitmap.rows * bitmap.width;
     byte *bitmapPointer = bitmap.buffer;
     uint32_t *glyphBuffer = new uint32_t[bitmapSize];
     uint32_t basePixel = 0xFFFFFF00;
-
     //Use bitmap values to fill out alpha of texture
     for(unsigned int i = 0; i < bitmapSize; i++)
+    {
         glyphBuffer[i] = basePixel | *bitmapPointer++;
+    }
     
 
     //Create SDL_Surface from buffer
     SDL_Surface *glyphSurface = SDL_CreateRGBSurfaceFrom(glyphBuffer, bitmap.width, bitmap.rows, 32, sizeof(uint32_t) * bitmap.width, redMask, greenMask, blueMask, alphaMask);
     std::string glyphName = std::to_string(c) + "_" + std::to_string(size);
-    SDL_Texture *glyphTexture = this->glyphManager->textureCreateFromSurface(glyphName, renderer, glyphSurface);
+    SDL_Texture *glyphTexture = m_GlyphTextureManager->textureCreateFromSurface(glyphName, renderer, glyphSurface);
 
     //Free stuff
     SDL_FreeSurface(glyphSurface);
     delete[] glyphBuffer;
 
     //Add it to glyph map
-    this->glyphMap[std::make_pair(c, size)] = {(uint16_t)bitmap.width, (uint16_t)bitmap.rows, (int)glyphSlot->advance.x >> 6, glyphSlot->bitmap_top, glyphSlot->bitmap_left, glyphTexture };
+    m_GlyphMap[std::make_pair(c, size)] = {(uint16_t)bitmap.width, (uint16_t)bitmap.rows, (int)glyphSlot->advance.x >> 6, glyphSlot->bitmap_top, glyphSlot->bitmap_left, glyphTexture };
 
     //Return it now
-    return &this->glyphMap[std::make_pair(c, size)];
+    return &m_GlyphMap[std::make_pair(c, size)];
 }

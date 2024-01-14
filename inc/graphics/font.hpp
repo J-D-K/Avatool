@@ -1,8 +1,8 @@
 #pragma once
-#include <switch.h>
 #include <SDL2/SDL.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include <memory>
 #include <string>
 #include <cstdio>
 #include <map>
@@ -27,11 +27,15 @@ class systemFont
         int getTextWidth(SDL_Renderer *renderer, std::string text, int fontSize);
 
     private:
-        FT_Library lib;
-        FT_Face faces[6];
-        int totalFonts = 0;
-        textureManager *glyphManager;
-        std::map<std::pair<uint32_t, int>, glyph> glyphMap;
+        //Freetype
+        FT_Library m_Lib;
+        FT_Face m_Faces[6];
+        //How many fonts the system actually loaded
+        int m_TotalFonts = 0;
+        //Fonts get their own texture manager
+        std::unique_ptr<textureManager> m_GlyphTextureManager;
+        //Map keeps pointer to texture and coordinates for glyphs already loaded and converted
+        std::map<std::pair<uint32_t, int>, glyph> m_GlyphMap;
 
         // No need for access outside of here
         void resizeFont(int fontSize);

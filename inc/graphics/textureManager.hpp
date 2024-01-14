@@ -1,5 +1,6 @@
 #pragma once
 #include <SDL2/SDL.h>
+#include <memory>
 #include <string>
 #include <map>
 #include "type.hpp"
@@ -28,5 +29,5 @@ class textureManager
 
     private:
         bool textureIsLoaded(std::string textureName);
-        std::map<std::string, SDL_Texture *> textureMap;
+        std::map<std::string, SDL_Texture *> m_TextureMap;
 };

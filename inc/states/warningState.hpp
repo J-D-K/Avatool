@@ -1,21 +1,23 @@
 #pragma once
 #include <string>
 #include <stack>
+#include "avatool.hpp"
 #include "avatoolState.hpp"
-#include "type.hpp"
 
 class warningState : public avatoolState
 {
     public:
-        //Needs appStateStack to push edit state
-        warningState(graphics * gfx, avatoolStack *appStateStack);
+        warningState(avatool *app);
         ~warningState();
 
-        void update(const uint64_t& padDown);
-        void render(graphics *gfx);
+        void update();
+        void render();
 
     private:
+        //Pointer to main app the access members
+        avatool *m_App;
+        //Terminates the services needed to read and write to account save data
         bool terminateAndMount();
-        graphics *gfx;
-        avatoolStack *appStateStack;
+        //Returns if there's actually avatar images on SD
+        bool sdHasAvatars();
 };
