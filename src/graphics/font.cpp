@@ -112,7 +112,7 @@ void systemFont::renderText(SDL_Renderer *renderer, SDL_Texture *target, int fon
     size_t textLength = strlen(str);
 
     //Resize the font before processing
-    this->resizeFont(fontSize);
+    resizeFont(fontSize);
 
     for(unsigned int i = 0; i < textLength; )
     {
@@ -132,7 +132,7 @@ void systemFont::renderText(SDL_Renderer *renderer, SDL_Texture *target, int fon
             continue;
         }
 
-        glyph *g = this->getGlyph(renderer, codepoint, fontSize);
+        glyph *g = getGlyph(renderer, codepoint, fontSize);
         if(g != NULL)
         {
             SDL_Rect sourceRect = { 0, 0, g->width, g->height };
@@ -156,7 +156,7 @@ void systemFont::renderTextWrap(SDL_Renderer *renderer, SDL_Texture *target, int
     ssize_t unitCount = 0;
     uint32_t codepoint = 0, workingColor = color;
 
-    this->resizeFont(fontSize);
+    resizeFont(fontSize);
 
     for(unsigned int i = 0; i < textlength; )
     {
@@ -164,7 +164,7 @@ void systemFont::renderTextWrap(SDL_Renderer *renderer, SDL_Texture *target, int
         std::memset(wordbuffer, 0x00, 128);
         std::memcpy(wordbuffer, &str[i], nextBreakPoint);
         //Break the line if width is exceeded
-        unsigned int wordWidth = this->getTextWidth(renderer, wordbuffer, fontSize);
+        unsigned int wordWidth = getTextWidth(renderer, wordbuffer, fontSize);
         if((int)(workingX + wordWidth) >= (int)(x + maxWidth))
         {
             workingX = x;
@@ -201,7 +201,7 @@ int systemFont::getTextWidth(SDL_Renderer *renderer, std::string text, int fontS
 {
     int textWidth = 0;
     uint32_t codepoint = 0, unitCount = 0, colorMod = 0;
-    this->resizeFont(fontSize);
+    resizeFont(fontSize);
     for(unsigned int i = 0; i < text.length(); )
     {
         unitCount = decode_utf8(&codepoint, reinterpret_cast<const uint8_t *>(&text.c_str()[i]));
@@ -248,7 +248,7 @@ glyph *systemFont::getGlyph(SDL_Renderer *renderer, uint32_t c, int size)
         return &m_GlyphMap[std::make_pair(c, size)];
     }
     
-    FT_GlyphSlot glyphSlot = this->loadGlyph(c, FT_LOAD_RENDER);
+    FT_GlyphSlot glyphSlot = loadGlyph(c, FT_LOAD_RENDER);
     FT_Bitmap bitmap = glyphSlot->bitmap;
     if(bitmap.pixel_mode != FT_PIXEL_MODE_GRAY)
     {
