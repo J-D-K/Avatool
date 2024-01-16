@@ -1,6 +1,5 @@
 #pragma once
-
-#include "graphics.hpp"
+#include "graphics/graphics.hpp"
 
 class avatoolState
 {

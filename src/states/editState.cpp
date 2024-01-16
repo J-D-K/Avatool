@@ -1,6 +1,6 @@
 #include <switch.h>
 #include <string>
-#include "graphics.hpp"
+#include "graphics/graphics.hpp"
 #include "states/editState.hpp"
 
 // Names of textures
@@ -88,7 +88,7 @@ void editState::update()
     else if (padDown & HidNpadButton_Y)
     {
         // Copy all to SD card
-        copyDirToDir(s_TargetDirPath, s_SourceDirPath);
+        copyDirectory(s_TargetDirPath, s_SourceDirPath);
 
         // Reset menu, source directory
         m_SourceMenu->reset();

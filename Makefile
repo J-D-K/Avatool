@@ -39,9 +39,9 @@ include $(DEVKITPRO)/libnx/switch_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	Avatool
 BUILD		:=	build
-SOURCES		:=	src src/graphics src/states src/filesystem src/ui
+SOURCES		:=	src src/graphics src/states src/filesystem src/ui src/io
 DATA		:=	data
-INCLUDES	:=	inc inc/graphics
+INCLUDES	:=	inc
 APP_VERSION := 2.1.0
 APP_AUTHOR  := JK
 ROMFS		:=	romfs

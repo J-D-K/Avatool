@@ -1,7 +1,7 @@
 #include <switch.h>
 #include <cstring>
 #include "graphics/colors.hpp"
-#include "font.hpp"
+#include "graphics/font.hpp"
 
 static const uint32_t redMask   = 0xFF000000;
 static const uint32_t greenMask = 0x00FF0000;
@@ -257,7 +257,7 @@ glyph *systemFont::getGlyph(SDL_Renderer *renderer, uint32_t c, int size)
 
     //Prepare buffer to convert to surface
     size_t bitmapSize = bitmap.rows * bitmap.width;
-    byte *bitmapPointer = bitmap.buffer;
+    uint8_t *bitmapPointer = reinterpret_cast<uint8_t *>(bitmap.buffer);
     uint32_t *glyphBuffer = new uint32_t[bitmapSize];
     uint32_t basePixel = 0xFFFFFF00;
     //Use bitmap values to fill out alpha of texture

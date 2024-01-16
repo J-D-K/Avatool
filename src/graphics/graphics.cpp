@@ -1,6 +1,6 @@
 #include <SDL2/SDL_image.h>
 #include <cstdio>
-#include "graphics.hpp"
+#include "graphics/graphics.hpp"
 
 graphics::graphics()
 {
@@ -12,8 +12,8 @@ graphics::graphics()
 
     IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
 
-    m_SharedFont = new systemFont();
-    m_TextureManager = new textureManager();
+    m_SystemFont = std::make_unique<systemFont>();
+    m_TextureManager = std::make_unique<textureManager>();
 }
 
 graphics::~graphics()
@@ -39,7 +39,7 @@ void graphics::renderTextf(SDL_Texture *target, int fontSize, uint32_t color, in
     va_start(args, format);
     vsprintf(str, format, args);
     va_end(args);
-    m_SharedFont->renderText(m_Renderer, target, fontSize, color, x, y, str);
+    m_SystemFont->renderText(m_Renderer, target, fontSize, color, x, y, str);
 }
 
 void graphics::renderTextfWrap(SDL_Texture *target, int fontSize, uint32_t color, int x, int y, int maxWidth, const char *format, ...)
@@ -49,7 +49,7 @@ void graphics::renderTextfWrap(SDL_Texture *target, int fontSize, uint32_t color
     va_start(args, format);
     vsprintf(str, format, args);
     va_end(args);
-    m_SharedFont->renderTextWrap(m_Renderer, target, fontSize, x, y, maxWidth, color, str);
+    m_SystemFont->renderTextWrap(m_Renderer, target, fontSize, x, y, maxWidth, color, str);
 }
 
 void graphics::clearTexture(SDL_Texture *texture, uint32_t color)

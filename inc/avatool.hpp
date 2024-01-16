@@ -3,8 +3,7 @@
 #include <memory>
 #include <stack>
 #include "avatoolState.hpp"
-#include "graphics.hpp"
-#include "type.hpp"
+#include "graphics/graphics.hpp"
 
 class avatool
 {

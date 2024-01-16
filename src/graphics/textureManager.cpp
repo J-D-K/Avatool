@@ -2,7 +2,7 @@
 #include <SDL2/SDL_image.h>
 #include "graphics/textureManager.hpp"
 
-static SDL_Texture *loadJPEGMem(SDL_Renderer *renderer, const byte *data, size_t dataSize)
+static SDL_Texture *loadJPEGMem(SDL_Renderer *renderer, const std::byte *data, size_t dataSize)
 {
     SDL_Texture *ret = NULL;
     SDL_RWops   *jpg = SDL_RWFromConstMem(data, dataSize);
@@ -16,7 +16,7 @@ static SDL_Texture *loadJPEGMem(SDL_Renderer *renderer, const byte *data, size_t
     return ret;
 }
 
-static SDL_Texture *loadPNGMem(SDL_Renderer *renderer, const byte *data, size_t dataSize)
+static SDL_Texture *loadPNGMem(SDL_Renderer *renderer, const std::byte *data, size_t dataSize)
 {
     SDL_Texture *ret = NULL;
     SDL_RWops   *png = SDL_RWFromConstMem(data, dataSize);
@@ -86,7 +86,7 @@ SDL_Texture *textureManager::textureLoadFromFile(std::string textureName, SDL_Re
     return ret;
 }
 
-SDL_Texture *textureManager::textureLoadFromMem(std::string textureName, SDL_Renderer *renderer, imageTypes imgType, const byte *data, size_t dataSize)
+SDL_Texture *textureManager::textureLoadFromMem(std::string textureName, SDL_Renderer *renderer, imageTypes imgType, const std::byte *data, size_t dataSize)
 {
     if(textureIsLoaded(textureName))
     {

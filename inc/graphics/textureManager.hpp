@@ -1,9 +1,8 @@
 #pragma once
 #include <SDL2/SDL.h>
-#include <memory>
+#include <cstddef>
 #include <string>
 #include <map>
-#include "type.hpp"
 
 typedef enum
 {
@@ -25,7 +24,7 @@ class textureManager
         // Loads path
         SDL_Texture *textureLoadFromFile(std::string textureName, SDL_Renderer *renderer, const char *path);
         // Loads image from data. Only really used for icons
-        SDL_Texture *textureLoadFromMem(std::string textureName, SDL_Renderer *renderer, imageTypes imgType, const byte *data, size_t dataSize);
+        SDL_Texture *textureLoadFromMem(std::string textureName, SDL_Renderer *renderer, imageTypes imgType, const std::byte *data, size_t dataSize);
 
     private:
         bool textureIsLoaded(std::string textureName);

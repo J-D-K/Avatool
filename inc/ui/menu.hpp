@@ -2,7 +2,7 @@
 #include <SDL2/SDL.h>
 #include <string>
 #include <vector>
-#include "graphics.hpp"
+#include "graphics/graphics.hpp"
 
 class menu 
 {
