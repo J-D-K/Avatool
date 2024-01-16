@@ -2,7 +2,7 @@
 #include <switch.h>
 #include <memory>
 #include <stack>
-#include "avatoolState.hpp"
+#include "states/avatoolState.hpp"
 #include "graphics/graphics.hpp"
 
 class avatool
